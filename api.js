@@ -99,7 +99,7 @@ async function postMethod(key, value) {
 }
 
 async function deleteMethod(key) {
-  status = NAMESPACE.delete(key)
+  status = await NAMESPACE.delete(key)
   console.log(status)
 }
 
@@ -164,7 +164,7 @@ async function handleApiRequest(request) {
 
       if (pathArgs[2] === 'db') {
 
-        if (queryKey !== undefined || queryKey !== "") {
+        if (queryKey !== undefined && queryKey !== null && queryKey !== "") {
           switch (reqMethod) {
             case 'GET':
               const _value = await NAMESPACE.get(queryKey)
@@ -184,14 +184,13 @@ async function handleApiRequest(request) {
                 return new Response(jString('key not exist to update'), jCode(404))
               }
             case 'DELETE':
-              await deleteMethod(queryKey)
+              await NAMESPACE.delete(queryKey)
               return new Response(jString(`${queryKey} has been deleted`), jCode(200))
             default:
               return new Response(jString('wrong request method'), jCode(500))
           }
-        } else {
-          return new Response(jString('key not valid'), jCode(404))
         }
+        return new Response(jString('key not valid'), jCode(404))
       }
       return new Response(jString('no api service select'), jCode(500))
     }
