@@ -173,8 +173,13 @@ async function handleApiRequest(request) {
               }
               return new Response(jString(_value, queryKey), jCode(200))
             case 'POST':
-              await NAMESPACE.put(queryKey, postValue)
-              return new Response(jString(postValue, queryKey), jCode(201))
+              const _exist = await NAMESPACE.get(queryKey)
+              if (_exist === null) {
+                await NAMESPACE.put(queryKey, postValue)
+                return new Response(jString(postValue, queryKey), jCode(201))
+              } else {
+                return new Response(jString(`${queryKey} already exist`), jCode(403))
+              }
             case 'PUT':
               const exist = await NAMESPACE.get(queryKey)
               if (exist) {
@@ -187,7 +192,7 @@ async function handleApiRequest(request) {
               await NAMESPACE.delete(queryKey)
               return new Response(jString(`${queryKey} has been deleted`), jCode(200))
             default:
-              return new Response(jString('wrong request method'), jCode(500))
+              return new Response(jString('method not allowed'), OptCode(405))
           }
         }
         return new Response(jString('key not valid'), jCode(404))
