@@ -22,7 +22,7 @@ api.example.com / v1 / db / test
 
 ## Methods
 
-- `POST` method example
+- `POST` & `PUT` methods example
 
 ```js
 /*
@@ -30,7 +30,9 @@ header 'Content-Type' can be ignored
 @value
 */
 
-curl -X "PUT" "http://localhost:8787/v1/db/test" -d '{"value": "test"}'
+curl -X "POST" "http://localhost:8787/v1/db/test" -d '{"value": "test"}'
+
+curl -X "PUT" "http://localhost:8787/v1/db/test" -d '{"value": "test-1"}'
 ```
 
 ## Deploy
