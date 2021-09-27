@@ -6,6 +6,31 @@
 
 The Workers includes limited KV Usage. When adding KV records from the offical website, it's doing read function for lots times, it's expensive to do such behavior.
 
+## Design
+
+```js
+api.example.com / v1 / db / test
+
+/*
+@v1:     api version
+@db:     api service
+@test:   key
+*/
+```
+
+## Methods
+
+- `POST` method example
+
+```js
+/*
+header 'Content-Type' can be ignored
+@value
+*/
+
+curl -X "PUT" "http://localhost:8787/v1/db/test" -d '{"value": "test"}'
+```
+
 ## Deploy
 
 1. create a worker
