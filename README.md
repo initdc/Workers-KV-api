@@ -16,9 +16,9 @@ The Workers includes limited KV Usage. When adding KV records from the offical w
 
 4. create records in KV database
 
-5. set route for `*.example.com`
+5. set route for `api.example.com`
 
-6. create DNS record for `*.example.com`
+6. create DNS record for `api.example.com`
 
 ## Reference
 
