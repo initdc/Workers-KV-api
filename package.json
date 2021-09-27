@@ -1,0 +1,22 @@
+{
+  "name": "workers-kv-api",
+  "version": "0.0.1",
+  "description": "api implementation to manage Cloudflare Workers KV",
+  "main": "api.js",
+  "scripts": {
+    "dev": "miniflare api.js -k SUB"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/initdc/List-Workers-KV.git"
+  },
+  "author": "initdc",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/initdc/List-Workers-KV/issues"
+  },
+  "homepage": "https://github.com/initdc/List-Workers-KV#readme",
+  "devDependencies": {
+    "miniflare": "^1.4.1"
+  }
+}
