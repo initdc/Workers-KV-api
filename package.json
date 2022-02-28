@@ -17,6 +17,6 @@
   },
   "homepage": "https://github.com/initdc/List-Workers-KV#readme",
   "devDependencies": {
-    "miniflare": "^1.4.1"
+    "miniflare": "^2.3.0"
   }
 }

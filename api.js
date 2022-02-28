@@ -1,5 +1,8 @@
-// set to your KV namespace, remember binding it to workers 
-const NAMESPACE = SUB
+const NS = SUB;
+
+const apiMethods = ["GET", "POST", "PUT", "DELETE", "OPTIONS"];
+const apiVersion = ["v1", "v2"];
+const apiService = ["db", "search"];
 
 const DEFAULT_SECURITY_HEADERS = {
   /*
@@ -34,171 +37,130 @@ const DEFAULT_SECURITY_HEADERS = {
   */
   "X-Content-Type-Options": "nosniff",
   "Referrer-Policy": "strict-origin-when-cross-origin",
-  'Cross-Origin-Embedder-Policy': 'require-corp; report-to="default";',
-  'Cross-Origin-Opener-Policy': 'same-site; report-to="default";',
+  "Cross-Origin-Embedder-Policy": 'require-corp; report-to="default";',
+  "Cross-Origin-Opener-Policy": 'same-site; report-to="default";',
   "Cross-Origin-Resource-Policy": "same-site",
-}
+};
 
-const jHeaders = {
-  'Content-Type': 'application/json; charset=utf-8'
-}
+const JSON_HEADERS = {
+  "Content-Type": "application/json; charset=utf-8",
+};
 
-const optHeaders = {
-  'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS'
-}
+const OPTIONS_HEADERS = {
+  "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
+};
 
-addEventListener('fetch', function (event) {
-  const { request } = event
-  const response = handleApiRequest(request)
-  event.respondWith(response)
-})
+Object.assign(JSON_HEADERS, DEFAULT_SECURITY_HEADERS);
+Object.assign(OPTIONS_HEADERS, DEFAULT_SECURITY_HEADERS);
 
-function jString(value, key) {
-  let jValue = {}
+addEventListener("fetch", (event) =>
+  event.respondWith(handleRequest(event.request))
+);
+
+function JsonBody(value, key) {
+  const obj = {};
   if (key) {
-    jValue[key] = value
+    obj[key] = value;
   } else {
-    jValue["msg"] = value
+    obj["msg"] = value;
   }
-  return JSON.stringify(jValue, null, 2)
+  return JSON.stringify(obj, null, 2);
 }
 
-function jCode(code) {
-  Object.assign(jHeaders, DEFAULT_SECURITY_HEADERS)
-  // console.log(jHeaders)
-  let jObj = {
-    status: code,
-    headers: jHeaders
-  }
-  return jObj
-}
+const initHeader = (code) => {
+  return { status: code, headers: JSON_HEADERS };
+};
 
-function OptCode(code) {
-  Object.assign(optHeaders, DEFAULT_SECURITY_HEADERS)
-  // console.log(optHeaders)
-  let jObj = {
-    status: code,
-    headers: optHeaders
-  }
-  return jObj
-}
+async function handleRequest(request) {
+  const method = request.method;
 
-async function getMethod(key) {
-  const value = await NAMESPACE.get(key)
-  if (value === null) {
-    return new Response(jString('This is a null value', key), jCode(200))
-  }
-
-  return new Response(jString(value, key), jCode(200))
-}
-
-
-async function postMethod(key, value) {
-  status = await NAMESPACE.put(key, value)
-  console.log(status)
-}
-
-async function deleteMethod(key) {
-  status = await NAMESPACE.delete(key)
-  console.log(status)
-}
-
-async function RESTfulRequest(method, key, { value }) {
-  switch (method) {
-    case 'GET':
-      const _value = await NAMESPACE.get(key)
-      if (_value === null) {
-        return new Response(jString('This is a null value', key), jCode(200))
-      }
-      return new Response(jString(_value, key), jCode(200))
-    case 'POST':
-      await postMethod(key, value)
-      return new Response(jString(value, key), jCode(201))
-    case 'PUT':
-      exist = await NAMESPACE.get(key)
-      if (exist) {
-        await postMethod(key, value)
-        return new Response(jString(value, key), jCode(200))
-      } else {
-        return new Response(jString('key not exist to update'), jCode(404))
-      }
-    case 'DELETE':
-      await deleteMethod(key)
-      return new Response(jString(`${key} has been deleted`), jCode(200))
-    default:
-      return new Response(jString('wrong request method'), jCode(500))
-  }
-}
-
-async function handleApiRequest(request) {
-
-  const reqMethod = request.method
-  const reqURL = new URL(request.url)
-  const path = reqURL.pathname
-  // console.log(path)
-
-  const pathArgs = path.split('/')
-  console.log(pathArgs)
-
-  const queryKey = pathArgs[3]
-  console.log(queryKey)
-
-  let postValue = new String()
-
-  const reqObj = {}
-
-  if (request.body) {
-    data = await request.json()
-    Object.assign(reqObj, data)
-  }
-
-  console.log(reqObj)
-  if (reqObj) {
-    postValue = reqObj['value']
-  }
-
-  if (reqMethod === 'OPTIONS') {
-    return new Response(null, OptCode(204))
-  } else {
-    if (pathArgs[1] === 'v1') {
-
-      if (pathArgs[2] === 'db') {
-
-        if (queryKey !== undefined && queryKey !== null && queryKey !== "") {
-          switch (reqMethod) {
-            case 'GET':
-              const _value = await NAMESPACE.get(queryKey)
-              if (_value === null) {
-                return new Response(jString(null, queryKey), jCode(404))
-              }
-              return new Response(jString(_value, queryKey), jCode(200))
-            case 'POST':
-              const _exist = await NAMESPACE.get(queryKey)
-              if (_exist === null) {
-                await NAMESPACE.put(queryKey, postValue)
-                return new Response(jString(postValue, queryKey), jCode(201))
-              } else {
-                return new Response(jString(`${queryKey} already exist`), jCode(403))
-              }
-            case 'PUT':
-              const exist = await NAMESPACE.get(queryKey)
-              if (exist) {
-                await NAMESPACE.put(queryKey, postValue)
-                return new Response(jString(postValue, queryKey), jCode(200))
-              } else {
-                return new Response(jString('key not exist to update'), jCode(404))
-              }
-            case 'DELETE':
-              await NAMESPACE.delete(queryKey)
-              return new Response(jString(`${queryKey} has been deleted`), jCode(200))
-            default:
-              return new Response(jString('method not allowed'), OptCode(405))
-          }
-        }
-        return new Response(jString('key not valid'), jCode(404))
-      }
-      return new Response(jString('no api service select'), jCode(500))
+  if (apiMethods.indexOf(method) !== -1) {
+    if (method === "OPTIONS") {
+      return new Response(null, { status: 204, headers: OPTIONS_HEADERS });
     }
-    return new Response(jString('wrong api version'), jCode(500))
+
+    // path will be: /v1/db/:key
+    const url = new URL(request.url)
+    const { pathname } = url
+
+    const args = pathname.split("/");
+    const ver = args[1];
+    const service = args[2];
+    const key = args[3];
+
+    if (apiVersion.indexOf(ver) !== -1) {
+      if (apiService.indexOf(service) !== -1) {
+        switch (service) {
+          case "db":
+            const value = await NS.get(key)
+            const example = `POST/PUT object example: {"value": "https://example.com"}`
+
+            if (key) {
+              const postBody = request.body
+              switch (method) {
+                case "GET":
+                  if (value) return new Response(JsonBody(value, key), initHeader(200))
+                  return new Response(JsonBody("Value not found"), initHeader(404))
+                case "POST":
+                  if (value) return new Response(JsonBody(`${key} already exists`), initHeader(409))
+                  let postObj
+                  try {
+                    postObj = await request.json()
+                  } catch (e) {
+                    return new Response(example, initHeader(400))
+                  }
+
+                  if (postBody) {
+                    if (postObj) {
+                      const postVal = postObj["value"];
+                      if (postVal) {
+                        await NS.put(key, postVal)
+                        return new Response(JsonBody(postVal, key), initHeader(201))
+                      }
+                      return new Response(JsonBody("value in POST object not found"), initHeader(404))
+                    }
+                  }
+                  return new Response(example, initHeader(400))
+                case "PUT":
+                  if (!value) return new Response(JsonBody(`${key} not exists, please create it`), initHeader(404))
+                  let putObj
+                  try {
+                    putObj = await request.json()
+                  } catch (e) {
+                    return new Response(example, initHeader(400))
+                  }
+
+                  if (postBody) {
+                    if (putObj) {
+                      const putVal = putObj["value"];
+                      if (putVal) {
+                        await NS.put(key, putVal)
+                        return new Response(JsonBody(putVal, key), initHeader(201))
+                      }
+                    }
+                  }
+                  return new Response(example, initHeader(400))
+                case "DELETE":
+                  if (!value) return new Response(JsonBody(`${key} not exists, delete noting`), initHeader(404))
+                  await NS.delete(key)
+                  return new Response(JsonBody(`${key} already deleted`), initHeader(200))
+              }
+            }
+            return new Response(JsonBody("Query key not valid"), initHeader(403));
+          case "search":
+            if (method !== "GET") return new Response(JsonBody(`Method ${method} not allowed.`), { status: 405, headers: {Allow: "GET"} });
+            if (key) {
+              const list = await NS.list({ prefix: key })
+              const listKeys = list.keys
+              if (listKeys) return new Response(JSON.stringify(listKeys, null, 2), { status: 200 });
+              return new Response(JsonBody("List is empty"), { status: 404 });
+            }
+            return new Response(JsonBody("Query key not valid"), initHeader(403));
+        }
+      }
+      return new Response(JsonBody("Service mismatched"), initHeader(500));
+    }
+    return new Response(JsonBody("API version mismatched"), initHeader(500));
   }
+  return new Response(JsonBody(`Method ${method} not allowed.`), { status: 405, headers: OPTIONS_HEADERS });
 }

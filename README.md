@@ -11,7 +11,7 @@ This api has `GET` `POST` `PUT` `DELETE` `OPTIONS` methods, for public use, you 
 ## Design
 
 ```js
-api.example.com / v1 / db / test
+api.example.com / v1 / db / test;
 
 /*
 @v1:     api version
@@ -30,9 +30,23 @@ header 'Content-Type' can be ignored
 @value
 */
 
-curl -X "POST" "http://localhost:8787/v1/db/test" -d '{"value": "test"}'
+/*
+@db service
+@path: /v1/db
+@methods: GET POST PUT DELETE
+*/
 
-curl -X "PUT" "http://localhost:8787/v1/db/test" -d '{"value": "test-1"}'
+curl -X "POST" "http://localhost:8787/v1/db/a" -d '{"value": "apple"}'
+
+curl -X "PUT" "http://localhost:8787/v1/db/ab" -d '{"value": "a banana"}'
+
+/*
+@search service
+@path: /v1/search
+@methods: GET
+*/
+
+curl -X "GET" "http://localhost:8787/v1/search/a"
 ```
 
 ## Deploy
