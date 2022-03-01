@@ -82,27 +82,28 @@ async function handleRequest(request) {
     // path will be: /v1/db/:key
     const url = new URL(request.url)
     const { pathname } = url
-
     const args = pathname.split("/");
-    const ver = args[1];
-    const service = args[2];
-    const key = args[3];
 
+    const ver = args[1];
     if (apiVersion.indexOf(ver) !== -1) {
+
+      const service = args[2];
       if (apiService.indexOf(service) !== -1) {
+
+        const key = args[3];
         switch (service) {
           case "db":
-            const value = await NS.get(key)
-            const example = `POST/PUT object example: {"value": "https://example.com"}`
-
             if (key) {
               const postBody = request.body
+              const example = `msg: POST/PUT object example {"value": "https://example.com"}`
+              const value = await NS.get(key)
               switch (method) {
                 case "GET":
                   if (value) return new Response(JsonBody(value, key), initHeader(200))
                   return new Response(JsonBody("Value not found"), initHeader(404))
                 case "POST":
                   if (value) return new Response(JsonBody(`${key} already exists`), initHeader(409))
+
                   let postObj
                   try {
                     postObj = await request.json()
@@ -123,6 +124,7 @@ async function handleRequest(request) {
                   return new Response(example, initHeader(400))
                 case "PUT":
                   if (!value) return new Response(JsonBody(`${key} not exists, please create it`), initHeader(404))
+
                   let putObj
                   try {
                     putObj = await request.json()
@@ -142,13 +144,15 @@ async function handleRequest(request) {
                   return new Response(example, initHeader(400))
                 case "DELETE":
                   if (!value) return new Response(JsonBody(`${key} not exists, delete noting`), initHeader(404))
+
                   await NS.delete(key)
                   return new Response(JsonBody(`${key} already deleted`), initHeader(200))
               }
             }
             return new Response(JsonBody("Query key not valid"), initHeader(403));
           case "search":
-            if (method !== "GET") return new Response(JsonBody(`Method ${method} not allowed.`), { status: 405, headers: {Allow: "GET"} });
+            if (method !== "GET") return new Response(JsonBody(`Method ${method} not allowed.`), { status: 405, headers: { Allow: "GET" } });
+
             if (key) {
               const list = await NS.list({ prefix: key })
               const listKeys = list.keys
