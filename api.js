@@ -147,6 +147,8 @@ async function handleRequest(request) {
 
                   await NS.delete(key)
                   return new Response(JsonBody(`${key} already deleted`), initHeader(200))
+                default:
+                  return new Response(JsonBody(`Method ${method} not allowed.`), { status: 405, headers: { Allow: "GET,POST,PUT,DELETE" } });
               }
             }
             return new Response(JsonBody("Query key not valid"), initHeader(403));
