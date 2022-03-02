@@ -2,7 +2,7 @@ const NS = SUB;
 
 const apiMethods = ["GET", "POST", "PUT", "DELETE", "OPTIONS"];
 const apiVersion = ["v1", "v2"];
-const apiService = ["db", "search"];
+const apiService = ["db", "search", "move"];
 
 const DEFAULT_SECURITY_HEADERS = {
   /*
@@ -91,11 +91,12 @@ async function handleRequest(request) {
       if (apiService.indexOf(service) !== -1) {
 
         const key = args[3];
+
+        const postBody = request.body
         switch (service) {
           case "db":
             if (key) {
-              const postBody = request.body
-              const example = `msg: POST/PUT object example {"value": "https://example.com"}`
+              const dbErrMsg = `msg: POST/PUT object example {"value": "https://example.com"}`
               const value = await NS.get(key)
               switch (method) {
                 case "GET":
@@ -108,7 +109,7 @@ async function handleRequest(request) {
                   try {
                     postObj = await request.json()
                   } catch (e) {
-                    return new Response(example, initHeader(400))
+                    return new Response(dbErrMsg, initHeader(400))
                   }
 
                   if (postBody) {
@@ -121,7 +122,7 @@ async function handleRequest(request) {
                       return new Response(JsonBody("value in POST object not found"), initHeader(404))
                     }
                   }
-                  return new Response(example, initHeader(400))
+                  return new Response(dbErrMsg, initHeader(400))
                 case "PUT":
                   if (!value) return new Response(JsonBody(`${key} not exists, please create it`), initHeader(404))
 
@@ -129,7 +130,7 @@ async function handleRequest(request) {
                   try {
                     putObj = await request.json()
                   } catch (e) {
-                    return new Response(example, initHeader(400))
+                    return new Response(dbErrMsg, initHeader(400))
                   }
 
                   if (postBody) {
@@ -141,7 +142,7 @@ async function handleRequest(request) {
                       }
                     }
                   }
-                  return new Response(example, initHeader(400))
+                  return new Response(dbErrMsg, initHeader(400))
                 case "DELETE":
                   if (!value) return new Response(JsonBody(`${key} not exists, delete noting`), initHeader(404))
 
@@ -151,7 +152,7 @@ async function handleRequest(request) {
                   return new Response(JsonBody(`Method ${method} not allowed.`), { status: 405, headers: { Allow: "GET,POST,PUT,DELETE" } });
               }
             }
-            return new Response(JsonBody("Query key not valid"), initHeader(403));
+            return new Response(JsonBody("Key not valid"), initHeader(403));
           case "search":
             if (method !== "GET") return new Response(JsonBody(`Method ${method} not allowed.`), { status: 405, headers: { Allow: "GET" } });
 
@@ -161,7 +162,50 @@ async function handleRequest(request) {
               if (listKeys) return new Response(JSON.stringify(listKeys, null, 2), { status: 200 });
               return new Response(JsonBody("List is empty"), { status: 404 });
             }
-            return new Response(JsonBody("Query key not valid"), initHeader(403));
+            return new Response(JsonBody("Key not valid"), initHeader(403));
+          case "move":
+            console.log(`move: ${key}`)
+            // Github Copilot, I love you
+            if (method !== "PUT") return new Response(JsonBody(`Method ${method} not allowed.`), { status: 405, headers: { Allow: "PUT" } });
+
+            if (key) {
+              if (postBody) {
+                const moveErrMsg = `msg: PUT object example {"newKey": "bpple", "value": "if you want change value at once, add me"}`
+
+                let moveObj
+                try {
+                  moveObj = await request.json()
+                } catch (e) {
+                  return new Response(moveErrMsg, initHeader(400))
+                }
+
+                if (moveObj) {
+                  const newKey = moveObj["newKey"];
+                  if (newKey) {
+                    const newValue = moveObj["value"];
+                    if (newValue) {
+                      await NS.delete(key)
+                      await NS.put(newKey, newValue)
+                      return new Response(JsonBody(newValue, newKey), initHeader(201))
+                    }
+
+                    const value = await NS.get(key)
+                    if (value) {
+                      await NS.delete(key)
+                      await NS.put(newKey, value)
+                      return new Response(JsonBody(value, newKey), initHeader(201))
+                    }
+                    return new Response(JsonBody(`${key} not exists, can't move it`), initHeader(404))
+                  }
+                  return new Response(JsonBody("newKey in move object not found"), initHeader(404))
+                }
+                return new Response(JsonBody("move object not found"), initHeader(404))
+              }
+              return new Response(moveErrMsg, initHeader(400))
+            }
+            return new Response(JsonBody("Key not valid"), initHeader(403));
+          default:
+            return new Response(JsonBody("Service mismatched"), initHeader(500));
         }
       }
       return new Response(JsonBody("Service mismatched"), initHeader(500));

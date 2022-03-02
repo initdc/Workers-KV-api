@@ -91,11 +91,12 @@ async function handleRequest(request) {
       if (apiService.indexOf(service) !== -1) {
 
         const key = args[3];
+
+        const postBody = request.body
         switch (service) {
           case "db":
             if (key) {
-              const postBody = request.body
-              const example = `msg: POST/PUT object example {"value": "https://example.com"}`
+              const dbErrMsg = `msg: POST/PUT object example {"value": "https://example.com"}`
               const value = await NS.get(key)
               switch (method) {
                 case "GET":
@@ -108,7 +109,7 @@ async function handleRequest(request) {
                   try {
                     postObj = await request.json()
                   } catch (e) {
-                    return new Response(example, initHeader(400))
+                    return new Response(dbErrMsg, initHeader(400))
                   }
 
                   if (postBody) {
@@ -121,12 +122,12 @@ async function handleRequest(request) {
                       return new Response(JsonBody("value in POST object not found"), initHeader(404))
                     }
                   }
-                  return new Response(example, initHeader(400))
+                  return new Response(dbErrMsg, initHeader(400))
                 default:
-                  return new Response(JsonBody(`Method ${method} not allowed.`), { status: 405, headers: { Allow: "GET,POST" } });
+                  return new Response(JsonBody(`Method ${method} not allowed.`), { status: 405, headers: { Allow: "GET,POST,PUT,DELETE" } });
               }
             }
-            return new Response(JsonBody("Query key not valid"), initHeader(403));
+            return new Response(JsonBody("Key not valid"), initHeader(403));
           case "search":
             if (method !== "GET") return new Response(JsonBody(`Method ${method} not allowed.`), { status: 405, headers: { Allow: "GET" } });
 
@@ -136,7 +137,9 @@ async function handleRequest(request) {
               if (listKeys) return new Response(JSON.stringify(listKeys, null, 2), { status: 200 });
               return new Response(JsonBody("List is empty"), { status: 404 });
             }
-            return new Response(JsonBody("Query key not valid"), initHeader(403));
+            return new Response(JsonBody("Key not valid"), initHeader(403));
+          default:
+            return new Response(JsonBody("Service mismatched"), initHeader(500));
         }
       }
       return new Response(JsonBody("Service mismatched"), initHeader(500));

@@ -4,7 +4,8 @@
   "description": "api implementation to manage Cloudflare Workers KV",
   "main": "api.js",
   "scripts": {
-    "dev": "miniflare api.js -k SUB"
+    "dev": "miniflare api.js -k SUB",
+    "prod": "miniflare api.prod.js -k SUB"
   },
   "repository": {
     "type": "git",

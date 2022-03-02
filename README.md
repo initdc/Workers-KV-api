@@ -47,6 +47,17 @@ curl -X "PUT" "http://localhost:8787/v1/db/ab" -d '{"value": "a banana"}'
 */
 
 curl -X "GET" "http://localhost:8787/v1/search/a"
+
+/*
+!!Danger Zone
+move = db (DELETE + POST/PUT)
+
+@move service
+@path: /v1/move
+@methods: PUT
+*/
+
+curl -X "PUT" "http://localhost:8787/v1/move/a" -d '{"newKey": "bpple", "value": "a banana"}'
 ```
 
 ## Deploy
