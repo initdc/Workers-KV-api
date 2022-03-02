@@ -100,7 +100,7 @@ async function handleRequest(request) {
               switch (method) {
                 case "GET":
                   if (value) return new Response(JsonBody(value, key), initHeader(200))
-                  return new Response(JsonBody("Value not found"), initHeader(404))
+                  return new Response(JsonBody(`Value of ${key} not found`), initHeader(404))
                 case "POST":
                   if (value) return new Response(JsonBody(`${key} already exists`), initHeader(409))
 
